@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Lista de Tareas</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .add-task {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .task-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .add-btn:active {
+            transform: translateY(0);
+        }
+
+        .tasks-container {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+            transition: all 0.3s;
+        }
+
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .task-checkbox {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .stats {
+            padding: 20px;
+            background: #f8f9fa;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Mi Lista de Tareas</h1>
+            <p>Organiza tu día, una tarea a la vez</p>
+        </div>
+
+        <div class="add-task">
+            <input 
+                type="text" 
+                class="task-input" 
+                placeholder="¿Qué necesitas hacer hoy?"
+                id="taskInput"
+                maxlength="100"
+            >
+            <button class="add-btn" onclick="addTask()">
+                ➕ Agregar Tarea
+            </button>
+        </div>
+
+        <div class="tasks-container" id="tasksContainer">
+            <div class="empty-state" id="emptyState">
+                <div style="font-size: 60px; margin-bottom: 20px;">🎯</div>
+                <h3>¡Todo listo!</h3>
+                <p>No tienes tareas pendientes. ¡Agrega una nueva arriba!</p>
+            </div>
+        </div>
+
+        <div class="stats" id="stats">
+            Total: 0 tareas | Completadas: 0 | Pendientes: 0
+        </div>
+    </div>
+
+    <script>
+        let tasks = [];
+        let taskIdCounter = 0;
+
+        // Función para agregar una nueva tarea
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const taskText = input.value.trim();
+            
+            if (taskText === '') {
+                alert('Por favor escribe una tarea');
+                return;
+            }
+            
+            if (taskText.length > 100) {
+                alert('La tarea es muy larga. Máximo 100 caracteres.');
+                return;
+            }
+
+            const newTask = {
+                id: taskIdCounter++,
+                text: taskText,
+                completed: false,
+                createdAt: new Date()
+            };
+
+            tasks.push(newTask);
+            input.value = '';
+            renderTasks();
+            updateStats();
+        }
+
+        // Función para renderizar todas las tareas
+        function renderTasks() {
+            const container = document.getElementById('tasksContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (tasks.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            const tasksHTML = tasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
+                    <input 
+                        type="checkbox" 
+                        class="task-checkbox" 
+                        ${task.completed ? 'checked' : ''}
+                        onchange="toggleTask(${task.id})"
+                    >
+                    <span class="task-text">${escapeHtml(task.text)}</span>
+                    <button class="delete-btn" onclick="deleteTask(${task.id})">
+                        🗑️ Eliminar
+                    </button>
+                </div>
+            `).join('');
+            
+            container.innerHTML = tasksHTML;
+        }
+
+        // Función para marcar/desmarcar tarea como completada
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                renderTasks();
+                updateStats();
+            }
+        }
+
+        // Función para eliminar una tarea
+        function deleteTask(id) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                tasks = tasks.filter(t => t.id !== id);
+                renderTasks();
+                updateStats();
+            }
+        }
+
+        // Función para actualizar las estadísticas
+        function updateStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = total - completed;
+            
+            document.getElementById('stats').textContent = 
+                `Total: ${total} tareas | Completadas: ${completed} | Pendientes: ${pending}`;
+        }
+
+        // Función para escapar HTML y prevenir XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Permitir agregar tareas con Enter
+        document.getElementById('taskInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Agregar algunas tareas de ejemplo al cargar la página
+        window.addEventListener('load', function() {
+            // Puedes comentar estas líneas si no quieres tareas de ejemplo
+            tasks = [
+                {
+                    id: taskIdCounter++,
+                    text: "Aprender más sobre GitHub",
+                    completed: false,
+                    createdAt: new Date()
+                },
+                {
+                    id: taskIdCounter++,
+                    text: "Crear mi primer repositorio",
+                    completed: true,
+                    createdAt: new Date()
+                },
+                {
+                    id: taskIdCounter++,
+                    text: "Hacer mi portafolio web",
+                    completed: true,
+                    createdAt: new Date()
+                }
+            ];
+            renderTasks();
+            updateStats();
+        });
+    </script>
+</body>
+</html>
