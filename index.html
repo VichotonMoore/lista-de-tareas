@@ -236,14 +236,17 @@
         // Función para renderizar todas las tareas
         function renderTasks() {
             const container = document.getElementById('tasksContainer');
-            const emptyState = document.getElementById('emptyState');
             
             if (tasks.length === 0) {
-                emptyState.style.display = 'block';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 60px; margin-bottom: 20px;">🎯</div>
+                        <h3>¡Todo listo!</h3>
+                        <p>No tienes tareas pendientes. ¡Agrega una nueva arriba!</p>
+                    </div>
+                `;
                 return;
             }
-            
-            emptyState.style.display = 'none';
             
             const tasksHTML = tasks.map(task => `
                 <div class="task-item ${task.completed ? 'completed' : ''}" data-id="${task.id}">
@@ -253,7 +256,7 @@
                         ${task.completed ? 'checked' : ''}
                         onchange="toggleTask(${task.id})"
                     >
-                    <span class="task-text">${escapeHtml(task.text)}</span>
+                    <span class="task-text">${task.text}</span>
                     <button class="delete-btn" onclick="deleteTask(${task.id})">
                         🗑️ Eliminar
                     </button>
